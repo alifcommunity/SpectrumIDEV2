@@ -11,8 +11,8 @@ import os
 try:
     from ctypes import windll
 
-    myappid = 'com.Shad7ows.SpectrumIDE.V2'
-    windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    appID = 'com.Shad7ows.SpectrumIDE.V2'
+    windll.shell32.SetCurrentProcessExplicitAppUserModelID(appID)
 except ImportError:
     print('Can\'t import ctypes lib')
 
@@ -24,7 +24,7 @@ class MainWin(QMainWindow):
         self.setWindowTitle("طيف")
         self.setWindowIcon(QIcon('./icons/TaifLogo.svg'))
         self.version = '0.4.1'
-        self.setFontsDataBase()
+        self.set_fonts_database()
 
         self.centerWidget = QWidget(self)
 
@@ -33,18 +33,17 @@ class MainWin(QMainWindow):
         self.codeLay = QVBoxLayout(self.centerWidget)
         self.codeLay.setContentsMargins(0, 0, 0, 0)
 
-        # self.file_sys_model = QFileSystemModel()
-        # self.file_sys_model.setRootPath(QDir.currentPath())
-        # self.tree_file_view = QTreeView()
-        # self.tree_file_view.setModel(self.file_sys_model)
-        # self.tree_file_view.setRootIndex(self.file_sys_model.index((QDir.currentPath())))
-        # self.tree_file_view.currentChanged.connect(lambda current, previos: self.openChosenFile(current, previos))
-        #
-        # self.file_sys_widget = QDockWidget('مسار المشروع')
-        # self.file_sys_widget.setFeatures(
-        #     QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
-        # self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.file_sys_widget)
-        # self.file_sys_widget.setWidget(self.tree_file_view)
+        self.fileModel = QFileSystemModel()
+        self.fileModel.setRootPath(QDir.currentPath())
+        self.fileView = QTreeView()
+        self.fileView.setModel(self.fileModel)
+        self.fileView.setRootIndex(self.fileModel.index((QDir.currentPath())))
+
+        self.fileWidget = QDockWidget('مسار المشروع')
+        self.fileWidget.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.fileWidget)
+        self.fileWidget.setWidget(self.fileView)
 
         self.codeWin = CodeEditor.CodeEditor()
 
@@ -54,7 +53,7 @@ class MainWin(QMainWindow):
         self.tabWin.setTabsClosable(True)
         self.tabWin.setMovable(True)
         self.tabWin.tabCloseRequested.connect(lambda idx: self.closeTab(idx))
-        self.newFile(False)
+        self.new_file(False)
 
         self.dockWin = QDockWidget('الطرفية')
         self.dockWin.setFeatures(
@@ -63,15 +62,15 @@ class MainWin(QMainWindow):
         self.dockWin.setWidget(self.resultWin)
 
         self.charCount = CharCont(self)
-        self.alifVersion()
+        self.alif_version()
 
         self.setCentralWidget(self.centerWidget)
         self.codeLay.addWidget(self.tabWin)
 
         self._Actions()
-        self._MenuBar()
-        self._toolBar()
-        self.staBar()
+        self._menu_bar()
+        self._tool_bar()
+        self._status_bar()
 
         ########################################المتغيرات########################################
 
@@ -82,12 +81,12 @@ class MainWin(QMainWindow):
 
         #########################################################################################
 
-    def setFontsDataBase(self):
-        fonts_dir = 'fonts'
-        for font in os.listdir(fonts_dir):
-            QFontDatabase.addApplicationFont(os.path.join(fonts_dir, font))
+    def set_fonts_database(self):
+        fontsDir = 'fonts'
+        for font in os.listdir(fontsDir):
+            QFontDatabase.addApplicationFont(os.path.join(fontsDir, font))
 
-    def _MenuBar(self):
+    def _menu_bar(self):
         menuBar = self.menuBar()
         fileMenu = menuBar.addMenu('&ملف')
         fileMenu.addAction(self.newAction)
@@ -100,7 +99,7 @@ class MainWin(QMainWindow):
 
         helpMenu = menuBar.addMenu('مساعدة')
 
-    def _toolBar(self):
+    def _tool_bar(self):
         runToolBar = QToolBar('تشغيل')
         self.addToolBar(Qt.ToolBarArea.RightToolBarArea, runToolBar)
         runToolBar.setMovable(False)
@@ -111,49 +110,46 @@ class MainWin(QMainWindow):
         self.newAction = QAction(QIcon('./icons/add_black.svg'), '&جديد', self)
         self.newAction.setShortcut('Ctrl+N')
         self.newAction.setStatusTip('فتح تبويب جديد... ')
-        self.newAction.triggered.connect(lambda clear: self.newFile(True))
+        self.newAction.triggered.connect(lambda clear: self.new_file(True))
 
         self.openAction = QAction(QIcon('./icons/folder_open_black.svg'), '&فتح', self)
         self.openAction.setShortcut("Ctrl+O")
         self.openAction.setStatusTip('فتح ملف... ')
-        self.openAction.triggered.connect(self.openFile)
+        self.openAction.triggered.connect(self.open_file)
         self.saveAction = QAction(QIcon('./icons/save_black.svg'), '&حفظ', self)
         self.saveAction.setShortcut("Ctrl+S")
         self.saveAction.setStatusTip('حفظ شفرة التبويب الحالي... ')
-        self.saveAction.triggered.connect(self.saveFile)
+        self.saveAction.triggered.connect(self.save_file)
 
         self.compileAction = QAction(QIcon('./icons/compile_black.svg'), 'ترجمة', self)
         self.compileAction.setShortcut('Ctrl+f2')
         self.compileAction.setStatusTip('بناء شفرة التبويب الحالي... ')
-        self.compileAction.triggered.connect(self.compileThreadTask)
+        self.compileAction.triggered.connect(self.compile_thread_task)
         self.runAction = QAction(QIcon('./icons/run_arrow.svg'), 'تشغيل', self)
         self.runAction.setShortcut('Ctrl+f10')
         self.runAction.setStatusTip('تنفيذ الشفرة التي تم بناؤها... ')
-        self.runAction.triggered.connect(self.runThreadTask)
+        self.runAction.triggered.connect(self.run_thread_task)
 
         self.addExampleAction = QAction('جمع عددين', self)
         self.addExampleAction.setStatusTip('فتح مثال "جمع.alif"')
-        self.addExampleAction.triggered.connect(self.openAddExample)
+        self.addExampleAction.triggered.connect(self.open_add_example)
 
         self.WebuiExampleAction = QAction('واجهة ويب', self)
         self.WebuiExampleAction.setStatusTip('فتح مثال "تطبيق واجهة ويب.alif"')
-        self.WebuiExampleAction.triggered.connect(self.openWebuiExample)
+        self.WebuiExampleAction.triggered.connect(self.open_webui_example)
 
-    def staBar(self):
+    def _status_bar(self):
         self.stateBar = QStatusBar()
         self.setStatusBar(self.stateBar)
-        self.stateBar.addPermanentWidget(self.charCount.char_count_lable)
+        self.stateBar.addPermanentWidget(self.charCount.charCountLable)
 
-    def closeTab(self, idx):
-        if self.isSaved(idx):
+    def close_tab(self, idx):
+        if self.is_saved(idx):
             self.tabWin.removeTab(idx)
         if self.tabWin.tabText(idx) in self.tabName:
             self.tabName.remove(self.tabWin.tabText(idx))
 
-    # def openChosenFile(self, current, previos):
-    #     print(self.file_sys_model.filePath(current))
-
-    def newFile(self, clear):
+    def new_file(self, clear):
         codeWin = CodeEditor.CodeEditor()
         if clear:
             codeWin.clear()
@@ -161,15 +157,15 @@ class MainWin(QMainWindow):
             self.tabWin.addTab(codeWin, 'غير معنون')
             self.tabWin.setCurrentWidget(codeWin)
 
-    def openFile(self):
+    def open_file(self):
         self.filePath, _ = QFileDialog.getOpenFileName(self, "فتح ملف ألف", "", "كل الملفات (*.alif)")
         if self.filePath:
             if self.filePath in self.tabName:
-                self.setTabByName(self.filePath)
+                self.set_tab_by_name(self.filePath)
                 idx = self.tabWin.currentIndex()
-                self.isSaved(idx)
+                self.is_saved(idx)
             else:
-                self.newFile(True)
+                self.new_file(True)
                 with open(self.filePath, "r", encoding="utf-8") as openFile:
                     fileCode = openFile.read()
                     self.tabWin.currentWidget().setPlainText(fileCode)
@@ -177,13 +173,13 @@ class MainWin(QMainWindow):
                 self.tabWin.setTabText(self.tabWin.currentIndex(), self.filePath)
                 self.tabName.append(self.filePath)
 
-    def setTabByName(self, pathName):
+    def set_tab_by_name(self, pathName):
         for indx in range(self.tabWin.count()):
             tabName = self.tabWin.tabText(indx)
             if pathName == tabName:
                 return self.tabWin.setCurrentIndex(indx)
 
-    def saveFile(self, idx):
+    def save_file(self, idx):
         tabChild = self.tabWin.widget(idx)
         alifCode = tabChild.toPlainText()
 
@@ -202,46 +198,46 @@ class MainWin(QMainWindow):
             else:
                 return ''
 
-    def isSaved(self, idx):
+    def is_saved(self, idx):
         if self.tabWin.widget(idx).document().isModified():
             result = self.msgBox("حفظ الملف", "هل تريد حفظ الملف؟", "حفظ", "عدم الحفظ", "إلغاء")
             if result == 0:
-                self.saveFile(idx)
+                self.save_file(idx)
                 if not self.filePath:
                     return False
             elif result == 2:
                 return False
         return True
 
-    def msgBox(self, title, text, frstBtn, scndBtn, thrdBtn):
+    def msg_box(self, title, text, firstBtn, secondBtn, therdBtn):
         msgBox = QMessageBox()
-        msgBox.addButton(frstBtn, QMessageBox.ButtonRole.YesRole)
-        msgBox.addButton(scndBtn, QMessageBox.ButtonRole.NoRole)
-        msgBox.addButton(thrdBtn, QMessageBox.ButtonRole.RejectRole)
+        msgBox.addButton(firstBtn, QMessageBox.ButtonRole.YesRole)
+        msgBox.addButton(secondBtn, QMessageBox.ButtonRole.NoRole)
+        msgBox.addButton(therdBtn, QMessageBox.ButtonRole.RejectRole)
         msgBox.setWindowTitle(title)
         msgBox.setWindowIcon(QIcon("./Icons/TaifLogo.svg"))
         msgBox.setText(text)
         msgBox.exec()
         return msgBox.result()
 
-    def compileThreadTask(self):
-        self.compile_thread = CompileThread()
+    def compile_thread_task(self):
+        self.compileThread = CompileThread()
         self.thread = QThread()
-        self.compile_thread.moveToThread(self.thread)
-        self.thread.started.connect(self.compile_thread.run)
-        self.compile_thread.result_signal.connect(self.codeCompile)
+        self.compileThread.moveToThread(self.thread)
+        self.thread.started.connect(self.compileThread.run)
+        self.compileThread.resultSignal.connect(self.code_compile)
         self.thread.start()
         self.compileAction.setEnabled(False)
         self.runAction.setEnabled(False)
         self.thread.finished.connect(lambda: self.compileAction.setEnabled(True))
         self.thread.finished.connect(lambda: self.runAction.setEnabled(True))
 
-    def runThreadTask(self):
-        self.run_thread = RunThread()
+    def run_thread_task(self):
+        self.runThread = RunThread()
         self.thread = QThread()
-        self.run_thread.moveToThread(self.thread)
-        self.thread.started.connect(self.run_thread.run)
-        self.run_thread.read_data_signal.connect(self.runCode)
+        self.runThread.moveToThread(self.thread)
+        self.thread.started.connect(self.runThread.run)
+        self.runThread.readDataSignal.connect(self.run_code)
         self.thread.start()
         self.compileAction.setEnabled(False)
         self.runAction.setEnabled(False)
@@ -249,7 +245,7 @@ class MainWin(QMainWindow):
         self.thread.finished.connect(lambda: self.runAction.setEnabled(True))
 
     @pyqtSlot(int, float)
-    def codeCompile(self, res: int, build_time: float):
+    def code_compile(self, res: int, build_time: float):
         self.temp_file = gettempdir()
         self.res = res
 
@@ -264,29 +260,10 @@ class MainWin(QMainWindow):
             self.resultWin.setPlainText("تحقق من أن لغة ألف 3 مثبتة بشكل صحيح")
 
     @pyqtSlot(str)
-    def runCode(self, data: str):
+    def run_code(self, data: str):
         self.resultWin.appendPlainText(data)
 
-    # def runCode(self):
-    #     if self.res == 0:
-    #         if sys.platform == "linux":
-    #             self.process = QProcess()
-    #             self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
-    #             self.process.readyRead.connect(self.ifReadReady)
-    #             self.process.start(os.path.join(self.temp_file, "./temp"))
-    #         else:
-    #             self.process = QProcess()
-    #             self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
-    #             self.process.readyRead.connect(self.ifReadReady)
-    #             self.process.start(os.path.join(self.temp_file, "temp.exe"))
-    #     else:
-    #         self.resultWin.appendPlainText("قم ببناء الشفرة أولاً")
-    #
-    # def ifReadReady(self):
-    #     # self.resultWin.setReadOnly(False)
-    #     self.resultWin.appendPlainText(str(self.process.readAll(), "utf8"))
-
-    def openAddExample(self):
+    def open_add_example(self):
         plain_text_example = CodeEditor.CodeEditor()
         self.tabWin.addTab(plain_text_example, 'جمع.alif')
         self.tabWin.setCurrentWidget(plain_text_example)
@@ -295,34 +272,34 @@ class MainWin(QMainWindow):
             self.tabWin.currentWidget().setPlainText(exampleRead)
             example.close()
 
-    def openWebuiExample(self):
-        plain_text_example = CodeEditor.CodeEditor()
-        self.tabWin.addTab(plain_text_example, 'تطبيق واجهة ويب.alif')
-        self.tabWin.setCurrentWidget(plain_text_example)
+    def open_webui_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'تطبيق واجهة ويب.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
         with open("./example/تطبيق واجهة ويب.alif", "r", encoding="utf-8") as example:
             exampleRead = example.read()
             self.tabWin.currentWidget().setPlainText(exampleRead)
             example.close()
 
-    def alifVersion(self):
+    def alif_version(self):
         alif_version = '--v'
         self.process = QProcess()
-        self.process.readyReadStandardOutput.connect(self.alifVersionStatusBar)
+        self.process.readyReadStandardOutput.connect(self.alif_version_statusbar)
         self.process.start("alif", [alif_version])
 
-    def alifVersionStatusBar(self):
+    def alif_version_statusbar(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
         stdout = stdout.split(' ')
         stdout = stdout[2].strip('v')
         stdout = f'ألف {stdout}'
-        version_lable = QLabel(stdout)
-        version_lable.setFont(QFont('Alusus Mono Medium'))
-        self.stateBar.addPermanentWidget(version_lable)
+        versionLable = QLabel(stdout)
+        versionLable.setFont(QFont('Alusus Mono Medium'))
+        self.stateBar.addPermanentWidget(versionLable)
 
 
 class CompileThread(QObject):
-    result_signal = pyqtSignal(int, float)
+    resultSignal = pyqtSignal(int, float)
 
     def __init__(self):
         super(CompileThread, self).__init__()
@@ -332,45 +309,45 @@ class CompileThread(QObject):
         timer.start(60000)
 
         code = mainWin.tabWin.currentWidget().toPlainText()
-        temp_file = gettempdir()
+        tempFile = gettempdir()
 
-        with open(os.path.join(temp_file, "temp.alif"), "w", encoding="utf-8") as temporaryFile:
+        with open(os.path.join(tempFile, "temp.alif"), "w", encoding="utf-8") as temporaryFile:
             temporaryFile.write(code)
             temporaryFile.close()
 
         process = QProcess()
-        alifCodeCompile = os.path.join(temp_file, "temp.alif")
+        alifCodeCompile = os.path.join(tempFile, "temp.alif")
         res = process.execute("alif", [alifCodeCompile])
         process.kill()
 
-        remine_time = timer.remainingTime()
-        build_time = (60000 - remine_time) / 1000
+        remineTime = timer.remainingTime()
+        buildTime = (60000 - remineTime) / 1000
         timer.stop()
 
-        self.result_signal.emit(res, build_time)
+        self.resultSignal.emit(res, buildTime)
         mainWin.thread.quit()
 
 
 class RunThread(QObject):
-    read_data_signal = pyqtSignal(str)
+    readDataSignal = pyqtSignal(str)
 
     def __init__(self):
         super(RunThread, self).__init__()
 
     def run(self):
         res = mainWin.res
-        temp_file = mainWin.temp_file
+        tempFile = mainWin.temp_file
         if res == 0:
             if sys.platform == "linux":
                 self.process = QProcess()
                 self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
                 self.process.readyRead.connect(self.ifReadReady)
-                self.process.start(os.path.join(temp_file, "./temp"))
+                self.process.start(os.path.join(tempFile, "./temp"))
             else:
                 self.process = QProcess()
                 self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
                 self.process.readyRead.connect(self.ifReadReady)
-                self.process.start(os.path.join(temp_file, "temp.exe"))
+                self.process.start(os.path.join(tempFile, "temp.exe"))
         else:
             mainWin.resultWin.appendPlainText("قم ببناء الشفرة أولاً")
             mainWin.thread.quit()
@@ -378,8 +355,7 @@ class RunThread(QObject):
     def ifReadReady(self):
         data = self.process.readAll()
         data = bytes(data).decode('utf8')
-        print(data, type(data))
-        self.read_data_signal.emit(data)
+        self.readDataSignal.emit(data)
         mainWin.thread.quit()
 
 
@@ -387,18 +363,18 @@ class CharCont:
     def __init__(self, MainWin):
         super(CharCont, self).__init__()
         self.mainWin = MainWin
-        self.char_count_lable = QLabel(f'{self.char_count()} حرف   ')
-        self.char_count_lable.setFont(QFont("Alusus Mono Medium"))
+        self.charCountLable = QLabel(f'{self.char_count()} حرف   ')
+        self.charCountLable.setFont(QFont("Alusus Mono Medium"))
         self.mainWin.tabWin.widget(0).textChanged.connect(self.charCount)
         self.mainWin.tabWin.currentChanged.connect(lambda idx: self.changeCharCount(idx))
 
     def changeCharCount(self, idx):
-        self.char_count_tab = len(self.mainWin.tabWin.widget(idx).toPlainText())
-        self.char_count_lable.setText(f'{self.char_count_tab} حرف   ')
+        self.charCountTab = len(self.mainWin.tabWin.widget(idx).toPlainText())
+        self.charCountLable.setText(f'{self.charCountTab} حرف   ')
         self.mainWin.tabWin.widget(idx).textChanged.connect(self.charCount)
 
     def charCount(self):
-        self.char_count_lable.setText(f'{self.char_count()} حرف   ')
+        self.charCountLable.setText(f'{self.char_count()} حرف   ')
 
     def char_count(self):
         return len(self.mainWin.tabWin.currentWidget().toPlainText())
