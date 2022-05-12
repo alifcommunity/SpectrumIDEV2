@@ -1,3 +1,7 @@
+######################################################################
+# استيراد المكاتب
+######################################################################
+
 from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QToolBar, QVBoxLayout, QTabWidget, \
     QDockWidget, QFileDialog, QMessageBox, QStatusBar, QLabel, QTreeView
 from PyQt6.QtGui import QIcon, QFont, QAction, QFontDatabase, QFileSystemModel
@@ -16,6 +20,10 @@ try:
 except ImportError:
     print('Can\'t import ctypes lib')
 
+
+######################################################################
+# الصنف الرئيسي
+######################################################################
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -36,8 +44,9 @@ class MainWin(QMainWindow):
         self.fileModel = QFileSystemModel()
         self.fileModel.setRootPath(QDir.currentPath())
         self.fileView = QTreeView()
+        self.fileView.doubleClicked.connect(lambda idx: self.open_selected_file(idx))
         self.fileView.setModel(self.fileModel)
-        self.fileView.setRootIndex(self.fileModel.index((QDir.currentPath())))
+        # self.fileView.setRootIndex(self.fileModel.index((QDir.currentPath())))
 
         self.fileWidget = QDockWidget('مسار المشروع')
         self.fileWidget.setFeatures(
@@ -72,14 +81,18 @@ class MainWin(QMainWindow):
         self._tool_bar()
         self._status_bar()
 
-        ########################################المتغيرات########################################
+        ######################################################################
+        # المتغيرات
+        ######################################################################
 
-        self.temp_file = gettempdir()
+        self.tempFile = gettempdir()
         self.filePath = ''
         self.tabName = []
-        self.res = 1
+        self.compileResult = 1
 
-        #########################################################################################
+        ######################################################################
+        # الدوال
+        ######################################################################
 
     def set_fonts_database(self):
         fontsDir = 'fonts'
@@ -148,6 +161,25 @@ class MainWin(QMainWindow):
             self.tabWin.removeTab(idx)
         if self.tabWin.tabText(idx) in self.tabName:
             self.tabName.remove(self.tabWin.tabText(idx))
+
+    def open_selected_file(self, idx):
+        filePath = self.fileModel.filePath(idx)
+        fileExtention = filePath.split('.')[-1]
+        if fileExtention == 'alif':
+            if filePath in self.tabName:
+                self.set_tab_by_name(filePath)
+                idx = self.tabWin.currentIndex()
+                self.is_saved(idx)
+            else:
+                self.new_file(True)
+                with open(filePath, "r", encoding="utf-8") as openFile:
+                    fileCode = openFile.read()
+                    self.tabWin.currentWidget().setPlainText(fileCode)
+                    openFile.close()
+                self.tabWin.setTabText(self.tabWin.currentIndex(), filePath)
+                self.tabName.append(filePath)
+
+
 
     def new_file(self, clear):
         codeWin = CodeEditor.CodeEditor()
@@ -245,18 +277,17 @@ class MainWin(QMainWindow):
         self.thread.finished.connect(lambda: self.runAction.setEnabled(True))
 
     @pyqtSlot(int, float)
-    def code_compile(self, res: int, build_time: float):
-        self.temp_file = gettempdir()
-        self.res = res
+    def code_compile(self, compileResult: int, build_time: float):
+        self.compileResult = compileResult
 
-        if res == 0:
+        if compileResult == 0:
             self.resultWin.setPlainText(f"[انتهى البناء خلال: {build_time} ثانية]")
-        elif res == 1:
-            log = os.path.join(self.temp_file, "temp.alif.log")
+        elif compileResult == 1:
+            log = os.path.join(self.tempFile, "temp.alif.log")
             logOpen = open(log, "r", encoding="utf-8")
             self.resultWin.setPlainText(logOpen.read())
             logOpen.close()
-        elif res == -2:
+        elif compileResult == -2:
             self.resultWin.setPlainText("تحقق من أن لغة ألف 3 مثبتة بشكل صحيح")
 
     @pyqtSlot(str)
@@ -282,10 +313,10 @@ class MainWin(QMainWindow):
             example.close()
 
     def alif_version(self):
-        alif_version = '--v'
+        alifVersion = '--v'
         self.process = QProcess()
         self.process.readyReadStandardOutput.connect(self.alif_version_statusbar)
-        self.process.start("alif", [alif_version])
+        self.process.start("alif", [alifVersion])
 
     def alif_version_statusbar(self):
         data = self.process.readAllStandardOutput()
@@ -298,6 +329,10 @@ class MainWin(QMainWindow):
         self.stateBar.addPermanentWidget(versionLable)
 
 
+######################################################################
+# مسلك الترجمة
+######################################################################
+
 class CompileThread(QObject):
     resultSignal = pyqtSignal(int, float)
 
@@ -309,7 +344,7 @@ class CompileThread(QObject):
         timer.start(60000)
 
         code = mainWin.tabWin.currentWidget().toPlainText()
-        tempFile = gettempdir()
+        tempFile = mainWin.tempFile
 
         with open(os.path.join(tempFile, "temp.alif"), "w", encoding="utf-8") as temporaryFile:
             temporaryFile.write(code)
@@ -328,6 +363,10 @@ class CompileThread(QObject):
         mainWin.thread.quit()
 
 
+######################################################################
+# مسلك التشغيل
+######################################################################
+
 class RunThread(QObject):
     readDataSignal = pyqtSignal(str)
 
@@ -335,8 +374,8 @@ class RunThread(QObject):
         super(RunThread, self).__init__()
 
     def run(self):
-        res = mainWin.res
-        tempFile = mainWin.temp_file
+        res = mainWin.compileResult
+        tempFile = mainWin.tempFile
         if res == 0:
             if sys.platform == "linux":
                 self.process = QProcess()
@@ -359,6 +398,10 @@ class RunThread(QObject):
         mainWin.thread.quit()
 
 
+######################################################################
+# عداد الحروف
+######################################################################
+
 class CharCont:
     def __init__(self, MainWin):
         super(CharCont, self).__init__()
@@ -379,6 +422,10 @@ class CharCont:
     def char_count(self):
         return len(self.mainWin.tabWin.currentWidget().toPlainText())
 
+
+######################################################################
+# تشغيل التطبيق
+######################################################################
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
