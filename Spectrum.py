@@ -8,7 +8,7 @@ from PyQt6.QtGui import QIcon, QFont, QAction, QFontDatabase, QFileSystemModel
 from PyQt6.QtCore import Qt, QProcess, QTimer, QObject, pyqtSignal, pyqtSlot, QThread, QDir
 from tempfile import gettempdir
 import CodeEditor
-import Console
+from Console import Consol, InputLine
 import sys
 import os
 
@@ -31,7 +31,7 @@ class MainWin(QMainWindow):
         self.resize(1280, 720)
         self.setWindowTitle("طيف")
         self.setWindowIcon(QIcon('./icons/TaifLogo.svg'))
-        self.version = '0.4.1'
+        self.version = '0.4.2'
         self.set_fonts_database()
 
         self.centerWidget = QWidget(self)
@@ -56,19 +56,26 @@ class MainWin(QMainWindow):
 
         self.codeWin = CodeEditor.CodeEditor()
 
-        self.resultWin = Console.Consol()
-
         self.tabWin = QTabWidget()
         self.tabWin.setTabsClosable(True)
         self.tabWin.setMovable(True)
-        self.tabWin.tabCloseRequested.connect(lambda idx: self.closeTab(idx))
+        self.tabWin.tabCloseRequested.connect(lambda idx: self.close_tab(idx))
         self.new_file(False)
+
+        self.consoleWidget = QWidget()
+        self.consoleLayout = QVBoxLayout()
+        self.consoleLayout.setContentsMargins(0, 0, 0, 0)
+        self.resultWin = Consol()
+        self.inputLine = InputLine()
 
         self.dockWin = QDockWidget('الطرفية')
         self.dockWin.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWin)
-        self.dockWin.setWidget(self.resultWin)
+        self.dockWin.setWidget(self.consoleWidget)
+        self.consoleWidget.setLayout(self.consoleLayout)
+        self.consoleLayout.addWidget(self.resultWin)
+        self.consoleLayout.addWidget(self.inputLine)
 
         self.charCount = CharCont(self)
         self.alif_version()
@@ -178,8 +185,6 @@ class MainWin(QMainWindow):
                     openFile.close()
                 self.tabWin.setTabText(self.tabWin.currentIndex(), filePath)
                 self.tabName.append(filePath)
-
-
 
     def new_file(self, clear):
         codeWin = CodeEditor.CodeEditor()
@@ -352,14 +357,14 @@ class CompileThread(QObject):
 
         process = QProcess()
         alifCodeCompile = os.path.join(tempFile, "temp.alif")
-        res = process.execute("alif", [alifCodeCompile])
+        compileResult = process.execute("alif", [alifCodeCompile])
         process.kill()
 
         remineTime = timer.remainingTime()
         buildTime = (60000 - remineTime) / 1000
         timer.stop()
 
-        self.resultSignal.emit(res, buildTime)
+        self.resultSignal.emit(compileResult, buildTime)
         mainWin.thread.quit()
 
 
@@ -372,11 +377,14 @@ class RunThread(QObject):
 
     def __init__(self):
         super(RunThread, self).__init__()
+        mainWin.inputLine.returnPressed.connect(self.wait_input)
+        self.process = None
 
     def run(self):
-        res = mainWin.compileResult
+        compileResult = mainWin.compileResult
         tempFile = mainWin.tempFile
-        if res == 0:
+
+        if compileResult == 0:
             if sys.platform == "linux":
                 self.process = QProcess()
                 self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
@@ -395,8 +403,13 @@ class RunThread(QObject):
         data = self.process.readAll()
         data = bytes(data).decode('utf8')
         self.readDataSignal.emit(data)
-        mainWin.thread.quit()
+        self.process.finished.connect(mainWin.thread.quit)
 
+    def wait_input(self):
+        if self.process != None:
+            dataWrite = mainWin.inputLine.text() + '\n'
+            dataWriteByte = dataWrite.encode()
+            self.process.write(dataWriteByte)
 
 ######################################################################
 # عداد الحروف

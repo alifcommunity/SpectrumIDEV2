@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QPlainTextEdit
+from PyQt6.QtWidgets import QPlainTextEdit, QLineEdit
 from PyQt6.QtCore import Qt
 
 
@@ -10,17 +10,13 @@ class Consol(QPlainTextEdit):
         self.resultDoc.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.document().setDefaultTextOption(self.resultDoc)
+        self.setFrameStyle(0)
         self.setReadOnly(True)
 
-    # def Lexer(self):
-    #     if len(self.toPlainText()) < 3:
-    #         self.insertPlainText('>')
-    #
-    #
-    # def keyPressEvent(self, event):
-    #     super(Consol, self).keyPressEvent(event)
-    #     if event.key() == Qt.Key.Key_Backspace:
-    #         self.Lexer()
-    #     if event.key() == Qt.Key.Key_Return:
-    #         self.insertPlainText('>>>')
-    #     event.accept()
+
+class InputLine(QLineEdit):
+    def __init__(self):
+        super(InputLine, self).__init__()
+
+        self.setPlaceholderText('المدخلات')
+        self.setFrame(False)
