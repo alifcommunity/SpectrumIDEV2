@@ -3,7 +3,8 @@
 # محرر طيف النسخة 2 | Spectrum IDE V2
 بيئة تطوير لغة ألف 3
 
-![Screenshot 2022-05-07 165250](https://user-images.githubusercontent.com/77246874/167257381-30aefe6d-d40b-421a-98a7-ddcc5ddcaaf2.png)
+
+ ![Spectrum GUI Snapshot](https://user-images.githubusercontent.com/77246874/168318936-9f6ba1b1-11c2-49f1-90d3-35e32a70e80e.png)
 
   
 طريقة التتبيث 
