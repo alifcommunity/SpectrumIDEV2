@@ -26,6 +26,7 @@ if [[ $inpt == "y" ]];
                 echo "#!/usr/bin/env bash
 dir=$(pwd)
 source \$dir/venv/bin/activate 
+cd \$dir
 python3 \$dir/Spectrum.py" > spectrum
                 chmod +x spectrum
                 mv spectrum $HOME/.local/bin/
