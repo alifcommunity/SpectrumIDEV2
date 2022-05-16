@@ -21,8 +21,6 @@ if [[ $inpt == "y" ]];
                 pip install -r requirements.txt
                 # make the file exceutable
                 chmod +x Spectrum.py
-                # create a symlink
-                ln -s $(pwd)/Spectrum.py $HOME/.local/bin/runspectrum
                 echo "#!/usr/bin/env bash
 dir=$(pwd)
 source \$dir/venv/bin/activate 
