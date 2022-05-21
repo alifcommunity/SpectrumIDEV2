@@ -31,7 +31,7 @@ class MainWin(QMainWindow):
         self.resize(1280, 720)
         self.setWindowTitle("طيف")
         self.setWindowIcon(QIcon('./icons/TaifLogo.svg'))
-        self.version = '0.4.2'
+        self.version = '0.4.3'
         self.set_fonts_database()
 
         self.centerWidget = QWidget(self)
@@ -114,8 +114,16 @@ class MainWin(QMainWindow):
         fileMenu.addAction(self.saveAction)
 
         examplesMenu = menuBar.addMenu('أمثلة')
-        examplesMenu.addAction(self.addExampleAction)
-        examplesMenu.addAction(self.WebuiExampleAction)
+        examplesMenu.addAction(self.PrintExampleAction)
+        examplesMenu.addAction(self.ImportExampleAction)
+        examplesMenu.addAction(self.VarExampleAction)
+        examplesMenu.addAction(self.MathExampleAction)
+        examplesMenu.addAction(self.FuncExampleAction)
+        examplesMenu.addAction(self.IfExampleAction)
+        examplesMenu.addAction(self.WhileExampleAction)
+        examplesMenu.addAction(self.InputExampleAction)
+        examplesMenu.addAction(self.ClassExampleAction)
+        examplesMenu.addAction(self.CppExampleAction)
 
         helpMenu = menuBar.addMenu('مساعدة')
 
@@ -150,13 +158,46 @@ class MainWin(QMainWindow):
         self.runAction.setStatusTip('تنفيذ الشفرة التي تم بناؤها... ')
         self.runAction.triggered.connect(self.run_thread_task)
 
-        self.addExampleAction = QAction('جمع عددين', self)
-        self.addExampleAction.setStatusTip('فتح مثال "جمع.alif"')
-        self.addExampleAction.triggered.connect(self.open_add_example)
+        self.PrintExampleAction = QAction('دالة طباعة', self)
+        self.PrintExampleAction.setStatusTip('فتح مثال "دالة طباعة.alif"')
+        self.PrintExampleAction.triggered.connect(self.print_example)
 
-        self.WebuiExampleAction = QAction('واجهة ويب', self)
-        self.WebuiExampleAction.setStatusTip('فتح مثال "تطبيق واجهة ويب.alif"')
-        self.WebuiExampleAction.triggered.connect(self.open_webui_example)
+        self.ImportExampleAction = QAction('استيراد مكتبة', self)
+        self.ImportExampleAction.setStatusTip('فتح مثال "استيراد مكتبة.alif"')
+        self.ImportExampleAction.triggered.connect(self.import_example)
+
+        self.VarExampleAction = QAction('تعريف متغير', self)
+        self.VarExampleAction.setStatusTip('فتح مثال "تعريف متغير.alif"')
+        self.VarExampleAction.triggered.connect(self.var_example)
+
+        self.MathExampleAction = QAction('العمليات الحسابية', self)
+        self.MathExampleAction.setStatusTip('فتح مثال "العمليات الحسابية.alif"')
+        self.MathExampleAction.triggered.connect(self.math_example)
+
+        self.FuncExampleAction = QAction('تعريف دالة', self)
+        self.FuncExampleAction.setStatusTip('فتح مثال "تعريف دالة.alif"')
+        self.FuncExampleAction.triggered.connect(self.func_example)
+
+        self.IfExampleAction = QAction('إذا الشرطية', self)
+        self.IfExampleAction.setStatusTip('فتح مثال "إذا الشرطية.alif"')
+        self.IfExampleAction.triggered.connect(self.if_example)
+
+        self.WhileExampleAction = QAction('حلقة كلما', self)
+        self.WhileExampleAction.setStatusTip('فتح مثال "حلقة كلما.alif"')
+        self.WhileExampleAction.triggered.connect(self.while_example)
+
+        self.InputExampleAction = QAction('طلب بيانات من المستخدم', self)
+        self.InputExampleAction.setStatusTip('فتح مثال "طلب بيانات من المستخدم.alif"')
+        self.InputExampleAction.triggered.connect(self.input_example)
+
+        self.ClassExampleAction = QAction('تعريف صنف', self)
+        self.ClassExampleAction.setStatusTip('فتح مثال "تعريف صنف.alif"')
+        self.ClassExampleAction.triggered.connect(self.class_example)
+
+        self.CppExampleAction = QAction('C++ حقن لغة', self)
+        self.CppExampleAction.setStatusTip('فتح مثال "C++ حقن لغة.alif"')
+        self.CppExampleAction.triggered.connect(self.cpp_injection_example)
+
 
     def _status_bar(self):
         self.stateBar = QStatusBar()
@@ -237,7 +278,7 @@ class MainWin(QMainWindow):
 
     def is_saved(self, idx):
         if self.tabWin.widget(idx).document().isModified():
-            result = self.msgBox("حفظ الملف", "هل تريد حفظ الملف؟", "حفظ", "عدم الحفظ", "إلغاء")
+            result = self.msg_box("حفظ الملف", "هل تريد حفظ الملف؟", "حفظ", "عدم الحفظ", "إلغاء")
             if result == 0:
                 self.save_file(idx)
                 if not self.filePath:
@@ -299,20 +340,92 @@ class MainWin(QMainWindow):
     def run_code(self, data: str):
         self.resultWin.appendPlainText(data)
 
-    def open_add_example(self):
-        plain_text_example = CodeEditor.CodeEditor()
-        self.tabWin.addTab(plain_text_example, 'جمع.alif')
-        self.tabWin.setCurrentWidget(plain_text_example)
-        with open("./example/جمع.alif", "r", encoding="utf-8") as example:
+    def print_example(self):
+        PlainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(PlainTextExample, 'دالة طباعة.alif')
+        self.tabWin.setCurrentWidget(PlainTextExample)
+        with open("./example/دالة طباعة.alif", "r", encoding="utf-8") as example:
             exampleRead = example.read()
             self.tabWin.currentWidget().setPlainText(exampleRead)
             example.close()
 
-    def open_webui_example(self):
+    def import_example(self):
+        PlainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(PlainTextExample, 'استيراد مكتبة.alif')
+        self.tabWin.setCurrentWidget(PlainTextExample)
+        with open("./example/استيراد مكتبة.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def var_example(self):
         plainTextExample = CodeEditor.CodeEditor()
-        self.tabWin.addTab(plainTextExample, 'تطبيق واجهة ويب.alif')
+        self.tabWin.addTab(plainTextExample, 'تعريف متغير.alif')
         self.tabWin.setCurrentWidget(plainTextExample)
-        with open("./example/تطبيق واجهة ويب.alif", "r", encoding="utf-8") as example:
+        with open("./example/تعريف متغير.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def math_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'العمليات الحسابية.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/العمليات الحسابية.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def func_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'تعريف دالة.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/تعريف دالة.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def if_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'إذا الشرطية.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/إذا الشرطية.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def while_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'حلقة كلما.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/حلقة كلما.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def input_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'طلب بيانات من المستخدم.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/طلب بيانات من المستخدم.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def class_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'تعريف صنف.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/تعريف صنف.alif", "r", encoding="utf-8") as example:
+            exampleRead = example.read()
+            self.tabWin.currentWidget().setPlainText(exampleRead)
+            example.close()
+
+    def cpp_injection_example(self):
+        plainTextExample = CodeEditor.CodeEditor()
+        self.tabWin.addTab(plainTextExample, 'C++ حقن لغة.alif')
+        self.tabWin.setCurrentWidget(plainTextExample)
+        with open("./example/C++ حقن لغة.alif", "r", encoding="utf-8") as example:
             exampleRead = example.read()
             self.tabWin.currentWidget().setPlainText(exampleRead)
             example.close()

@@ -19,7 +19,7 @@ class CodeEditor(QPlainTextEdit):
         self.openExample()
 
     def openExample(self):
-        with open("./example/مرحبا بالعالم.alif", "r", encoding="utf-8") as example:
+        with open("./example/دالة طباعة.alif", "r", encoding="utf-8") as example:
             exampleRead = example.read()
             self.setPlainText(exampleRead)
             example.close()
