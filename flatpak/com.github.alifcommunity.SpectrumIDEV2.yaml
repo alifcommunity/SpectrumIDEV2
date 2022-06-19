@@ -1,0 +1,42 @@
+app-id: com.github.alifcommunity.SpectrumIDEV2
+runtime: org.kde.Platform
+runtime-version: 6.2
+sdk: org.kde.Sdk
+base: com.riverbankcomputing.PyQt.BaseApp
+base-version: 6.2
+command: spectrum
+finish-args:
+  - --socket=x11
+  - --share=ipc
+  - --device=dri
+  - --socket=wayland
+  - --share=network
+  - --socket=pulseaudio
+cleanup-commands:
+  - ${FLATPAK_DEST}/cleanup-BaseApp.sh
+modules:
+  - name: SpectrumIDEV2
+    buildsystem: simple
+    build-commands:
+      - cp -rv * ${FLATPAK_DEST}
+      #- sed -i '1 i\#!/usr/bin/env python3' ${FLATPAK_DEST}/Spectrum.py
+    sources:
+      - type: git
+        url: https://github.com/alifcommunity/SpectrumIDEV2.git
+        branch: main
+
+  - name: Metainfo
+    buildsystem: simple
+    build-commands:
+      - install -D com.github.alifcommunity.SpectrumIDEV2.metainfo.xml ${FLATPAK_DEST}/share/metainfo/com.github.alifcommunity.SpectrumIDEV2.metainfo.xml
+      - install -D com.github.alifcommunity.SpectrumIDEV2.desktop ${FLATPAK_DEST}/share/applications/com.github.alifcommunity.SpectrumIDEV2.desktop
+      #- install -D com.github.alifcommunity.SpectrumIDEV2.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/
+      - install -D spectrum ${FLATPAK_DEST}/bin/spectrum
+    sources:
+      - type: file
+        path: com.github.alifcommunity.SpectrumIDEV2.desktop
+      - type: file
+        path: com.github.alifcommunity.SpectrumIDEV2.metainfo.xml
+      - type: file
+        path: spectrum
+      
