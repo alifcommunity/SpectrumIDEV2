@@ -1,0 +1,63 @@
+app-id: com.github.alifcommunity.SpectrumIDEV2
+runtime: org.kde.Sdk
+runtime-version: 6.2
+sdk: org.kde.Sdk
+base: com.riverbankcomputing.PyQt.BaseApp
+base-version: 6.2
+command: spectrum
+finish-args:
+  - --socket=x11
+  - --share=ipc
+  - --device=dri
+  - --socket=wayland
+  - --share=network
+  - --socket=pulseaudio
+cleanup-commands:
+  - ${FLATPAK_DEST}/cleanup-BaseApp.sh
+modules:
+  - name: SpectrumIDEV2
+    buildsystem: simple
+    build-commands:
+      - cp -rv * ${FLATPAK_DEST}
+      #- sed -i '1 i\#!/usr/bin/env python3' ${FLATPAK_DEST}/Spectrum.py
+    sources:
+      - type: git
+        url: https://github.com/alifcommunity/SpectrumIDEV2.git
+        branch: main
+
+  - name: Metainfo
+    buildsystem: simple
+    build-commands:
+      - install -D com.github.alifcommunity.SpectrumIDEV2.metainfo.xml ${FLATPAK_DEST}/share/metainfo/com.github.alifcommunity.SpectrumIDEV2.metainfo.xml
+      - install -D com.github.alifcommunity.SpectrumIDEV2.desktop ${FLATPAK_DEST}/share/applications/com.github.alifcommunity.SpectrumIDEV2.desktop
+      #- install -D com.github.alifcommunity.SpectrumIDEV2.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/
+      - install -D spectrum ${FLATPAK_DEST}/bin/spectrum
+    sources:
+      - type: file
+        path: com.github.alifcommunity.SpectrumIDEV2.desktop
+      - type: file
+        path: com.github.alifcommunity.SpectrumIDEV2.metainfo.xml
+      - type: file
+        path: spectrum
+
+  - name: boost
+    buildsystem: simple
+    build-commands:
+      - ./bootstrap.sh --prefix=${FLATPAK_DEST} --with-toolset=gcc --with-libraries=filesystem,system,program_options,date_time,locale,regex,nowide,thread
+      - ./b2 headers link=shared runtime-link=shared variant=release -j $FLATPAK_BUILDER_N_JOBS install
+    sources:
+      - type: archive
+        url: https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2
+        sha256: 475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39
+
+  - name: alif
+    #TODO: Change buildsystem to cmake
+    #buildsystem: cmake 
+    buildsystem: simple
+    build-commands:
+      - mkdir build && cd build && cmake .. . -DCMAKE_INSTALL_PREFIX=${FLATPAK_DEST} && make -j $FLATPAK_BUILDER_N_JOBS install
+      - cp -r /app/include/boost /app/lib/aliflib
+    sources:
+      - type: git
+        url: https://github.com/alifcommunity/compiler.git
+        commit: e13624a6a243997c5c1b262e38947f0e957b6ae2

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+Name=محرر طيف
+Comment=محرر طيف خاص بلغة ألف 3
+Categories=Development;IDE;
+
+#Icon=com.github.alifcommunity.SpectrumIDEV2
+Exec=spectrum
+Terminal=false
